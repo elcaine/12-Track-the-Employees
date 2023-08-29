@@ -1,7 +1,10 @@
-DROP DATABASE IF EXISTS challenge12_db;
-CREATE DATABASE challenge12_db;
+DROP DATABASE IF EXISTS challenge12_db
+;
+CREATE DATABASE challenge12_db
+;
 
-USE challenge12_db;
+USE challenge12_db
+;
 
 CREATE TABLE department (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
