@@ -36,10 +36,7 @@ class CLI {
         }
       ])
       .then(({ sql }) => {
-        // console.clear();
-        // this.title = `${name}'s Tasks`;
-        // console.log(`Running [${sql}] command`);
-        let theParams = '';
+        console.log(`sql: ${sql}`);
         switch(sql){
           case this.theChoices[this.theChoices.length - 1]:
             this.dd.end(err=>{
@@ -52,36 +49,22 @@ class CLI {
             console.log(`ttfn`);
             break;
           case this.theChoices[0]:  //  View departments
-            theParams = this.viewDepartments();
+            this.viewDepartments();
             break;
           case this.theChoices[1]:  //  View roles
-            theParams = this.viewRoles();
+            this.viewRoles();
             break;
           case this.theChoices[2]:  //  View employees
-            theParams = this.viewEmployees();
+            this.viewEmployees();
+            break;
+          case this.theChoices[3]:  //  Add department
+            this.addDept();
+            break;
+          case this.theChoices[4]:  //  Add Role
+            this.addRole();
             break;
         }
-
-        // if(theParams != this.theChoices[this.theChoices.length - 1]){
-        //   console.log(`after SWITCH........\n${theParams}`);
-        //   this.run();
-        // }
       })
-      // .then(()=>{
-      //   inquirer
-      //     .prompt([
-      //       {
-      //         type: 'list',
-      //         name: 'sel',
-      //         message: 'What would you like to do?',
-      //         choices: ['Yes', 'No']
-      //       }
-      //     ])
-      //     .then((r)=>{
-      //       console.log(`r is ${r.sel}`);
-      //       this.run();
-      //     })
-      // })
       .catch((err) => {
         console.log(err);
         console.log('Oops. Something went wrong.');
@@ -130,62 +113,64 @@ class CLI {
     return this.run();
   }
   
-  formatColumns(q, c, p){
-    let str = "";
-    const rowRay = [];
-    const lenRay = new Array(2).fill(0);
-    // Get query results
-    this.dd.query(q, p, (err,rows,flds)=>{
-      if(err){
-        console.log(`problems!!!!!!!!!!!!!: ${err}`);
-        return;
-      }
+  // formatColumns(q, c, p){
+  //   let str = "";
+  //   const rowRay = [];
+  //   const lenRay = new Array(2).fill(0);
+  //   // Get query results
+  //   this.dd.query(q, p, (err,rows,flds)=>{
+  //     if(err){
+  //       console.log(`problems!!!!!!!!!!!!!: ${err}`);
+  //       return;
+  //     }
       
-      for(let i = 0; i < rows.length; i++){
-        let str1 = rows[i].id.toString();
-        let str2 = rows[i].name;
-        rowRay.push([str1, str2]);
-        if(str1.length > lenRay[0]){
-          lenRay[0] = str1.length;
-        }
-        if(str2.length > lenRay[1]){
-          lenRay[1] = str2.length;
-        }
-      };
-    });
+  //     for(let i = 0; i < rows.length; i++){
+  //       let str1 = rows[i].id.toString();
+  //       let str2 = rows[i].name;
+  //       rowRay.push([str1, str2]);
+  //       if(str1.length > lenRay[0]){
+  //         lenRay[0] = str1.length;
+  //       }
+  //       if(str2.length > lenRay[1]){
+  //         lenRay[1] = str2.length;
+  //       }
+  //     };
+  //   });
 
-    let dashLen;
-    this.dd.query(c, function(err, rows, fields){
-      for(let i = 0; i < rows.length; i++){
-        str += rows[i].Field.padEnd(lenRay[i]+5);
-      }
-      dashLen = str.length;
-      str += '\n'.padEnd(dashLen, '-');
-      for(let i = 0; i < rowRay.length; i++){
-        str += `\n${rowRay[i][0].padEnd(lenRay[0]+5)}${rowRay[i][1].padEnd(lenRay[1]+5)}`;
-      }
-      str += '\n'.padEnd(dashLen, '=');
-      console.clear();
-      console.log(str);
-    });
-  }
+  //   let dashLen;
+  //   this.dd.query(c, function(err, rows, fields){
+  //     for(let i = 0; i < rows.length; i++){
+  //       str += rows[i].Field.padEnd(lenRay[i]+5);
+  //     }
+  //     dashLen = str.length;
+  //     str += '\n'.padEnd(dashLen, '-');
+  //     for(let i = 0; i < rowRay.length; i++){
+  //       str += `\n${rowRay[i][0].padEnd(lenRay[0]+5)}${rowRay[i][1].padEnd(lenRay[1]+5)}`;
+  //     }
+  //     str += '\n'.padEnd(dashLen, '=');
+  //     console.clear();
+  //     console.log(str);
+  //   });
+  // }
 
   viewRoles() {
     let str = "";
     const rowRay = [];
     const lenRay = new Array(4).fill(0);
     // Get query results
-    this.dd.query(`SELECT ?? FROM role`, [['id', 'title', 'salary', 'department_id']], (err,rows,flds)=>{
+    this.dd.query(`SELECT ?? FROM role JOIN department ON department.id=department_id`, 
+                [['role.id', 'role.title', 'role.salary', 'department.name']], (err,rows,flds)=>{
       if(err){
         console.log(`problems!!!!!!!!!!!!!: ${err}`);
         return;
       }
+      
       for(let i = 0; i < rows.length; i++){
         let id = rows[i].id.toString();
         let title = rows[i].title;
         let salary = rows[i].salary.toString();
-        let dept_id = rows[i].department_id.toString();
-        rowRay.push([id, title, salary, dept_id]);
+        let name = rows[i].name.toString();
+        rowRay.push([id, title, salary, name]);
         if(id.length > lenRay[0]){
           lenRay[0] = id.length;
         }
@@ -195,8 +180,8 @@ class CLI {
         if(salary.length > lenRay[0]){
           lenRay[0] = salary.length;
         }
-        if(dept_id.length > lenRay[1]){
-          lenRay[1] = dept_id.length;
+        if(name.length > lenRay[1]){
+          lenRay[1] = name.length;
         }
       };
     });
@@ -204,9 +189,10 @@ class CLI {
     let dashLen;
     this.dd.query('SHOW COLUMNS FROM role', function(err, rows, fields){
       const pad = 10;
-      for(let i = 0; i < rows.length; i++){
+      for(let i = 0; i < rows.length-1; i++){
         str += rows[i].Field.padEnd(lenRay[i]+pad);
       }
+      str += 'department'.padEnd(lenRay[4]+pad);
       dashLen = str.length;
       str += '\n'.padEnd(dashLen, '-');
       for(let i = 0; i < rowRay.length; i++){
@@ -217,82 +203,132 @@ class CLI {
       console.clear();
       console.log(str);
     });
-    /************************************************************************************ */
-    // this.formatColumns(`SELECT ? FROM role`, 'SHOW COLUMNS FROM role', []);
-    // Display column names
-    // let str = "";
-    // let dashLen;
-    // this.dd.query('SHOW COLUMNS FROM role', function(err, rows, fields){
-    //   for(let i = 0; i < rows.length; i++){
-    //     str += rows[i].Field.padEnd(10);
-    //   }
-    //   console.log(str);
-    //   dashLen = str.length;
-    //   console.log(''.padEnd(dashLen, '-'));
-    // });
-    
-    // // Display query results
-    // this.dd.query(`SELECT * FROM role`, (err,rows,flds)=>{
-    //   if(err){
-    //     console.log(`problems!!!!!!!!!!!!!: ${err}`);
-    //     return;
-    //   }
-    //   // console.log(rows);
-    //   let str;
-    //   rows.forEach((x)=>{
-    //     str = "";
-    //     str += x.id;
-    //     str = str.padEnd(10) + x.title;
-    //     str = str.padEnd(10);
-    //     console.log(str);
-    //   });
-    //   console.log(``.padEnd(dashLen, '='));
-    // });
     return this.run();
   }
   
   viewEmployees() {
-    // Display column names
-    this.dd.query('SHOW COLUMNS FROM employee', function(err, rows, fields){
-      let len = 0;
-      let str = "";
-      for(let i = 0; i < rows.length; i++){
-        str += rows[i].Field + "\t\t";
-        len += 4;
-      }
-      console.log(str);
-      len += str.length;
-      str = "";
-      for(let i = 0; i < len; i++){
-        str += "-";
-      }
-      console.log(str);
-    });
-    
-    // Display query results
-    this.dd.query(
-      `SELECT * FROM employee JOIN role ON role_id = role.id`, (err,rows,flds)=>{
+    let str = "";
+    const rowRay = [];
+    const lenRay = new Array(6).fill(0);
+    // Get query results
+    let qq = 
+    `SELECT ??, e2.first_name AS mgr FROM employee e1 JOIN role ON role_id=role.id JOIN department ON department_id=department.id
+    JOIN employee e2 ON e1.manager_id=e2.id`
+    this.dd.query(qq, 
+                [['e1.id', 'e1.first_name', 'e1.last_name', 'role.title',
+                  'department.name', 'role.salary']], (err,rows,flds)=>{
       if(err){
         console.log(`problems!!!!!!!!!!!!!: ${err}`);
         return;
       }
-      // console.log(rows);
-      rows.forEach((x)=>{
-        let str = x.id + "\t\t" + x.first_name + "\t";
-        if(x.first_name.length < 7){ str += "\t\t";}
-        str += x.last_name;
-        if(x.last_name.length < 7){ str += "\t\t\t";}
-        str += x.title;
-        if(x.title.length < 7){ str += "\t";}
-        str += x.salary;
-        if(x.salary.length < 7){ str += "\t";}
-        // need managers too (maybe more?)
-        console.log(str);
-      });
-      console.log(`==============================================\n`);
+      
+      rows.forEach(x=>console.log(x));
+      for(let i = 0; i < rows.length; i++){
+        let id = rows[i].id.toString();
+        let first_name = rows[i].first_name;
+        let last_name = rows[i].last_name;
+        let title = rows[i].title;
+        let dept = rows[i].name;
+        let salary = rows[i].salary.toString();
+        let mgr = rows[i].mgr;
+        rowRay.push([id, first_name, last_name, dept, title, salary, mgr]);
+        if(id.length > lenRay[0]){
+          lenRay[0] = id.length;
+        }
+        if(first_name.length > lenRay[1]){
+          lenRay[1] = first_name.length;
+        }
+        if(last_name.length > lenRay[2]){
+          lenRay[2] = last_name.length;
+        }
+        if(dept.length > lenRay[3]){
+          lenRay[3] = dept.length;
+        }
+        if(title.length > lenRay[4]){
+          lenRay[4] = title.length;
+        }
+        if(salary.length > lenRay[5]){
+          lenRay[5] = salary.length;
+        }
+        if(mgr.length > lenRay[6]){
+          lenRay[6] = mgr.length;
+        }
+      };
+    });
+
+    let dashLen;
+    this.dd.query('SHOW COLUMNS FROM employee', function(err, rows, fields){
+      const pad = 3;
+      const pad2 = 7;
+      str += 'id'.padEnd(lenRay[0]+pad) + 'fName'.padEnd(lenRay[1]+pad) + 'lName'.padEnd(lenRay[2]+pad);
+      str += 'dept'.padEnd(lenRay[3]+pad2) + 'title'.padEnd(lenRay[4]+pad2) + 'salary'.padEnd(lenRay[5]+pad2);
+      str += 'mgr'.padEnd(lenRay[6]+pad);
+      // rows.forEach(x=>console.log('???? ', x.Field));
+      dashLen = str.length;
+      str += '\n'.padEnd(dashLen, '-');
+      for(let i = 0; i < rowRay.length; i++){
+        str += `\n${rowRay[i][0].padEnd(lenRay[0]+pad)}${rowRay[i][1].padEnd(lenRay[1]+pad)}`;
+        str += `${rowRay[i][2].padEnd(lenRay[2]+pad)}${rowRay[i][3].padEnd(lenRay[3]+pad2)}`
+        str += `${rowRay[i][4].padEnd(lenRay[4]+pad2)}${rowRay[i][5].padEnd(lenRay[5]+pad2)}${rowRay[i][6].padEnd(lenRay[6]+pad)}`;
+      }
+      str += '\n'.padEnd(dashLen, '=');
+      // console.clear();
+      console.log(str);
+    });
+
+    return this.run();
+  }
+
+  addDept() {
+    inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'dpt',
+        message: 'What is the department name?'
+      }
+    ])
+    .then(({ dpt })=>{
+      const qq = `INSERT INTO department(name) VALUES('${dpt}')`;
+      this.dd.query(qq);
       return this.run();
+    })
+    .catch((e)=>{
+      console.log(`error:  ${e}`);
     });
   }
+
+  addRole() {
+    inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'title',
+        message: 'What is the title name?'
+      },
+      {
+        type: 'input',
+        name: 'salary',
+        message: 'What is the salary?'
+      },
+      {
+        type: 'input',
+        name: 'dept_id',
+        message: 'What is the department_id?'
+      }
+    ])
+    .then(({ title, salary, dept_id })=>{
+      const qq = `INSERT INTO role(title, salary, department_id) VALUES(?,?,?)`;
+      this.dd.query(qq, [`${title}`,salary,dept_id], (e)=>{
+        if(e){console.log(`e: ${e}`)};
+        return this.run();
+      });
+    })
+    .catch((e)=>{
+      console.log(`error:  ${e}`);
+    });
+  }
+  
 }
 const cli = new CLI();
 
@@ -301,30 +337,7 @@ cli.run();
 
 
 
-// {
-//   const sql = `INSERT INTO movies (movie_name)
-//     VALUES (?)`;
-//   const params = '<INQUIRER>';
-//   db.query(sql, params, (err, result) => {
-//     if (err) {
-//       console.log(`problems`);
-//       return;
-//     }
-//     console.log(`win ${result}`);
-//   });
-// }
 
-// {
-//   const sql = `SELECT * AS title FROM department`;
-  
-//   db.query(sql, (err, rows) => {
-//     if (err) {
-//       console.log(`problems`);
-//        return;
-//     }
-//     console.log(`rows???... ${rows}`);//  ... rows?
-//   });
-// }
 
 // {
 //   const sql = `DELETE FROM movies WHERE id = ?`;
@@ -338,17 +351,6 @@ cli.run();
 //     } else {
 //       console.log(`deleted:  ${result.affectedRows}, id??`);
 //     }
-//   });
-// }
-
-// {
-//   const sql = `SELECT movies.movie_name AS movie, reviews.review FROM reviews LEFT JOIN movies ON reviews.movie_id = movies.id ORDER BY movies.movie_name;`;
-//   db.query(sql, (err, rows) => {
-//     if (err) {
-//       console.log(`problems`);
-//       return;
-//     }
-//     console.log(`win...  maybe need to show sum'n here?`);
 //   });
 // }
 
