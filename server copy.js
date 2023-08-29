@@ -36,7 +36,6 @@ class CLI {
         }
       ])
       .then(({ sql }) => {
-        // console.clear();
         // this.title = `${name}'s Tasks`;
         // console.log(`Running [${sql}] command`);
         let theParams = '';
@@ -49,8 +48,7 @@ class CLI {
               }
               console.log(`... end of line`);
             });
-            console.log(`ttfn`);
-            break;
+            return console.log(`ttfn`);
           case this.theChoices[0]:  //  View departments
             theParams = this.viewDepartments();
             break;
@@ -66,22 +64,12 @@ class CLI {
         //   console.log(`after SWITCH........\n${theParams}`);
         //   this.run();
         // }
+        return theParams;
       })
-      // .then(()=>{
-      //   inquirer
-      //     .prompt([
-      //       {
-      //         type: 'list',
-      //         name: 'sel',
-      //         message: 'What would you like to do?',
-      //         choices: ['Yes', 'No']
-      //       }
-      //     ])
-      //     .then((r)=>{
-      //       console.log(`r is ${r.sel}`);
-      //       this.run();
-      //     })
-      // })
+      .then((r)=>{
+        console.log(`.then(r): ${r}`);
+        this.run();
+      })
       .catch((err) => {
         console.log(err);
         console.log('Oops. Something went wrong.');
@@ -89,20 +77,24 @@ class CLI {
   }
 
   viewDepartments() {
-    let str = "";
-    const rowRay = [];
-    const lenRay = new Array(2).fill(0);
     // Get query results
     this.dd.query(`SELECT ?? FROM department`, [['id', 'name']], (err,rows,flds)=>{
       if(err){
         console.log(`problems!!!!!!!!!!!!!: ${err}`);
         return;
       }
+      let str;
+      const rowRay = [];
+      const lenRay = new Array(2).fill(0);
       
       for(let i = 0; i < rows.length; i++){
+        // str = "";
+        // str += rows[i].id;
+        // str = str.padEnd(10) + rows[i].name;
+        // str = str.padEnd(10);
         let str1 = rows[i].id.toString();
         let str2 = rows[i].name;
-        rowRay.push([str1, str2]);
+        rowRay.push({str1, str2});
         if(str1.length > lenRay[0]){
           lenRay[0] = str1.length;
         }
@@ -110,145 +102,78 @@ class CLI {
           lenRay[1] = str2.length;
         }
       };
+      // console.log(`$$$$~... ${rowRay}\nlenRay: ${lenRay}`);
+      // console.log(``.padEnd(dashLen, '='));
+      // Display column names
+
+
+      str = "";
+      let dashLen;
+      this.dd.query('SHOW COLUMNS FROM department', function(err, rows, fields){
+        for(let i = 0; i < rows.length; i++){
+          str += rows[i].Field.padEnd(lenRay[i]);
+        }
+        console.log(str);
+        dashLen = str.length;
+        console.log(''.padEnd(dashLen, '-'));
+        return str;
+      });
+
+
+
+      // this.formatColumns('SHOW COLUMNS FROM department', rowRay, lenRay);
     });
 
-    let dashLen;
-    this.dd.query('SHOW COLUMNS FROM department', function(err, rows, fields){
-      for(let i = 0; i < rows.length; i++){
-        str += rows[i].Field.padEnd(lenRay[i]+5);
-      }
-      dashLen = str.length;
-      str += '\n'.padEnd(dashLen, '-');
-      for(let i = 0; i < rowRay.length; i++){
-        str += `\n${rowRay[i][0].padEnd(lenRay[0]+5)}${rowRay[i][1].padEnd(lenRay[1]+5)}`;
-      }
-      str += '\n'.padEnd(dashLen, '=');
-      console.clear();
-      console.log(str);
-    });
-    // this.formatColumns(`SELECT ?? FROM department`, 'SHOW COLUMNS FROM department', [['id', 'name']]);
-    return this.run();
+
+      // return this.run();
   }
   
-  formatColumns(q, c, p){
-    let str = "";
-    const rowRay = [];
-    const lenRay = new Array(2).fill(0);
-    // Get query results
-    this.dd.query(q, p, (err,rows,flds)=>{
-      if(err){
-        console.log(`problems!!!!!!!!!!!!!: ${err}`);
-        return;
-      }
-      
-      for(let i = 0; i < rows.length; i++){
-        let str1 = rows[i].id.toString();
-        let str2 = rows[i].name;
-        rowRay.push([str1, str2]);
-        if(str1.length > lenRay[0]){
-          lenRay[0] = str1.length;
-        }
-        if(str2.length > lenRay[1]){
-          lenRay[1] = str2.length;
-        }
-      };
-    });
-
-    let dashLen;
-    this.dd.query(c, function(err, rows, fields){
-      for(let i = 0; i < rows.length; i++){
-        str += rows[i].Field.padEnd(lenRay[i]+5);
-      }
-      dashLen = str.length;
-      str += '\n'.padEnd(dashLen, '-');
-      for(let i = 0; i < rowRay.length; i++){
-        str += `\n${rowRay[i][0].padEnd(lenRay[0]+5)}${rowRay[i][1].padEnd(lenRay[1]+5)}`;
-      }
-      str += '\n'.padEnd(dashLen, '=');
-      console.clear();
-      console.log(str);
-    });
-  }
+  // formatColumns(q, r, l){
+  //   let str = "";
+  //   let dashLen;
+  //   this.dd.query(q, function(err, rows, fields){
+  //     for(let i = 0; i < rows.length; i++){
+  //       str += rows[i].Field.padEnd(l[i]);
+  //     }
+  //     console.log(str);
+  //     dashLen = str.length;
+  //     console.log(''.padEnd(dashLen, '-'));
+  //   });
+  //   return -1;
+  // }
 
   viewRoles() {
+    // Display column names
+    // this.formatColumns('SHOW COLUMNS FROM role');
     let str = "";
-    const rowRay = [];
-    const lenRay = new Array(4).fill(0);
-    // Get query results
-    this.dd.query(`SELECT ?? FROM role`, [['id', 'title', 'salary', 'department_id']], (err,rows,flds)=>{
+    let dashLen;
+    this.dd.query('SHOW COLUMNS FROM role', function(err, rows, fields){
+      for(let i = 0; i < rows.length; i++){
+        str += rows[i].Field.padEnd(10);
+      }
+      console.log(str);
+      dashLen = str.length;
+      console.log(''.padEnd(dashLen, '-'));
+    });
+    
+    // Display query results
+    this.dd.query(`SELECT * FROM role`, (err,rows,flds)=>{
       if(err){
         console.log(`problems!!!!!!!!!!!!!: ${err}`);
         return;
       }
-      for(let i = 0; i < rows.length; i++){
-        let id = rows[i].id.toString();
-        let title = rows[i].title;
-        let salary = rows[i].salary.toString();
-        let dept_id = rows[i].department_id.toString();
-        rowRay.push([id, title, salary, dept_id]);
-        if(id.length > lenRay[0]){
-          lenRay[0] = id.length;
-        }
-        if(title.length > lenRay[1]){
-          lenRay[1] = title.length;
-        }
-        if(salary.length > lenRay[0]){
-          lenRay[0] = salary.length;
-        }
-        if(dept_id.length > lenRay[1]){
-          lenRay[1] = dept_id.length;
-        }
-      };
+      // console.log(rows);
+      let str;
+      rows.forEach((x)=>{
+        str = "";
+        str += x.id;
+        str = str.padEnd(10) + x.title;
+        str = str.padEnd(10);
+        console.log(str);
+      });
+      console.log(``.padEnd(dashLen, '='));
+      return this.run();
     });
-
-    let dashLen;
-    this.dd.query('SHOW COLUMNS FROM role', function(err, rows, fields){
-      const pad = 10;
-      for(let i = 0; i < rows.length; i++){
-        str += rows[i].Field.padEnd(lenRay[i]+pad);
-      }
-      dashLen = str.length;
-      str += '\n'.padEnd(dashLen, '-');
-      for(let i = 0; i < rowRay.length; i++){
-        str += `\n${rowRay[i][0].padEnd(lenRay[0]+pad)}${rowRay[i][1].padEnd(lenRay[1]+pad)}`;
-        str += `${rowRay[i][2].padEnd(lenRay[2]+pad)}${rowRay[i][3].padEnd(lenRay[0]+pad)}`;
-      }
-      str += '\n'.padEnd(dashLen, '=');
-      console.clear();
-      console.log(str);
-    });
-    /************************************************************************************ */
-    // this.formatColumns(`SELECT ? FROM role`, 'SHOW COLUMNS FROM role', []);
-    // Display column names
-    // let str = "";
-    // let dashLen;
-    // this.dd.query('SHOW COLUMNS FROM role', function(err, rows, fields){
-    //   for(let i = 0; i < rows.length; i++){
-    //     str += rows[i].Field.padEnd(10);
-    //   }
-    //   console.log(str);
-    //   dashLen = str.length;
-    //   console.log(''.padEnd(dashLen, '-'));
-    // });
-    
-    // // Display query results
-    // this.dd.query(`SELECT * FROM role`, (err,rows,flds)=>{
-    //   if(err){
-    //     console.log(`problems!!!!!!!!!!!!!: ${err}`);
-    //     return;
-    //   }
-    //   // console.log(rows);
-    //   let str;
-    //   rows.forEach((x)=>{
-    //     str = "";
-    //     str += x.id;
-    //     str = str.padEnd(10) + x.title;
-    //     str = str.padEnd(10);
-    //     console.log(str);
-    //   });
-    //   console.log(``.padEnd(dashLen, '='));
-    // });
-    return this.run();
   }
   
   viewEmployees() {

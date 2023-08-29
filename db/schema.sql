@@ -1,10 +1,11 @@
-DROP DATABASE IF EXISTS challenge12_db
-;
-CREATE DATABASE challenge12_db
-;
+DROP DATABASE IF EXISTS challenge12_db;
+CREATE DATABASE challenge12_db;
 
-USE challenge12_db
-;
+USE challenge12_db;
+
+DROP TABLE IF EXISTS department, role, employee;
+-- DROP TABLE IF EXISTS role;
+-- DROP TABLE IF EXISTS employee;
 
 CREATE TABLE department (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -15,8 +16,8 @@ CREATE TABLE role (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(30),
   salary DECIMAL,
-  dapartment_id INT,
-  FOREIGN KEY (dapartment_id)
+  department_id INT,
+  FOREIGN KEY (department_id)
   REFERENCES department(id)
   ON DELETE SET NULL
 );

@@ -5,7 +5,7 @@ VALUES ('Sales'),
        ('Legal'),
        ('Retired');
 
-INSERT INTO role (title, salary, dapartment_id)
+INSERT INTO role (title, salary, department_id)
 VALUES ('Fired', 60.5, 5),
        ('Lawyer', 30.75, 4),
        ('Accountant', 100, 3),
