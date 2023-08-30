@@ -36,7 +36,6 @@ class CLI {
         }
       ])
       .then(({ sql }) => {
-        console.log(`sql: ${sql}`);
         switch(sql){
           case this.theChoices[this.theChoices.length - 1]:
             this.dd.end(err=>{
@@ -62,6 +61,12 @@ class CLI {
             break;
           case this.theChoices[4]:  //  Add Role
             this.addRole();
+            break;
+          case this.theChoices[5]:  //  Add Employee
+            this.addEmployee();
+            break;
+          case this.theChoices[6]:  //  Update Employee
+            this.updateEmployee();
             break;
         }
       })
@@ -112,46 +117,6 @@ class CLI {
     // this.formatColumns(`SELECT ?? FROM department`, 'SHOW COLUMNS FROM department', [['id', 'name']]);
     return this.run();
   }
-  
-  // formatColumns(q, c, p){
-  //   let str = "";
-  //   const rowRay = [];
-  //   const lenRay = new Array(2).fill(0);
-  //   // Get query results
-  //   this.dd.query(q, p, (err,rows,flds)=>{
-  //     if(err){
-  //       console.log(`problems!!!!!!!!!!!!!: ${err}`);
-  //       return;
-  //     }
-      
-  //     for(let i = 0; i < rows.length; i++){
-  //       let str1 = rows[i].id.toString();
-  //       let str2 = rows[i].name;
-  //       rowRay.push([str1, str2]);
-  //       if(str1.length > lenRay[0]){
-  //         lenRay[0] = str1.length;
-  //       }
-  //       if(str2.length > lenRay[1]){
-  //         lenRay[1] = str2.length;
-  //       }
-  //     };
-  //   });
-
-  //   let dashLen;
-  //   this.dd.query(c, function(err, rows, fields){
-  //     for(let i = 0; i < rows.length; i++){
-  //       str += rows[i].Field.padEnd(lenRay[i]+5);
-  //     }
-  //     dashLen = str.length;
-  //     str += '\n'.padEnd(dashLen, '-');
-  //     for(let i = 0; i < rowRay.length; i++){
-  //       str += `\n${rowRay[i][0].padEnd(lenRay[0]+5)}${rowRay[i][1].padEnd(lenRay[1]+5)}`;
-  //     }
-  //     str += '\n'.padEnd(dashLen, '=');
-  //     console.clear();
-  //     console.log(str);
-  //   });
-  // }
 
   viewRoles() {
     let str = "";
@@ -222,7 +187,7 @@ class CLI {
         return;
       }
       
-      rows.forEach(x=>console.log(x));
+      // rows.forEach(x=>console.log(x));
       for(let i = 0; i < rows.length; i++){
         let id = rows[i].id.toString();
         let first_name = rows[i].first_name;
@@ -272,7 +237,7 @@ class CLI {
         str += `${rowRay[i][4].padEnd(lenRay[4]+pad2)}${rowRay[i][5].padEnd(lenRay[5]+pad2)}${rowRay[i][6].padEnd(lenRay[6]+pad)}`;
       }
       str += '\n'.padEnd(dashLen, '=');
-      // console.clear();
+      console.clear();
       console.log(str);
     });
 
@@ -299,37 +264,180 @@ class CLI {
   }
 
   addRole() {
-    inquirer
-    .prompt([
-      {
-        type: 'input',
-        name: 'title',
-        message: 'What is the title name?'
-      },
-      {
-        type: 'input',
-        name: 'salary',
-        message: 'What is the salary?'
-      },
-      {
-        type: 'input',
-        name: 'dept_id',
-        message: 'What is the department_id?'
+    // Get list of 
+    this.dd.query(`SELECT * FROM department`, (err,rows,fld)=>{
+      let rRay = [];
+      if(err){
+        console.log(`err: ${err}`);
+        return;
       }
-    ])
-    .then(({ title, salary, dept_id })=>{
-      const qq = `INSERT INTO role(title, salary, department_id) VALUES(?,?,?)`;
-      this.dd.query(qq, [`${title}`,salary,dept_id], (e)=>{
-        if(e){console.log(`e: ${e}`)};
-        return this.run();
+      rows.forEach(x=>{
+        const tmp = {id: x.id, name: x.name};
+        rRay.push(tmp);
+      });
+      
+      inquirer
+      .prompt([
+        {
+          type: 'input',
+          name: 'title',
+          message: 'What is the title name?'
+        },
+        {
+          type: 'input',
+          name: 'salary',
+          message: 'What is the salary?'
+        },
+        {
+          type: 'list',
+          name: 'dept',
+          message: 'Which department?',
+          choices: rRay
+        }
+      ])
+      .then(({ title, salary, dept })=>{
+        const selectedDpt = rRay.find(x=> dept == x.name);
+        const qq = `INSERT INTO role(title, salary, department_id) VALUES(?,?,?)`;
+        this.dd.query(qq, [`${title}`,salary,selectedDpt.id], (e)=>{
+          if(e){console.log(`e: ${e}`)};
+          console.clear();
+          return this.run();
+        });
+      })
+      .catch((e)=>{
+        console.log(`error:  ${e}`);
       });
     })
-    .catch((e)=>{
-      console.log(`error:  ${e}`);
-    });
+  }
+
+  addEmployee() {
+    // Arrays to hold manager/id and role/id pairs
+    let mRay = [];
+    let rRay = [];
+    // Get manager/id pairs for Inquirer list
+    this.dd.query(`SELECT * FROM employee`, (err,rows,fld)=>{
+      if(err){
+        console.log(`err: ${err}`);
+        return;
+      }
+      rows.forEach(x=>{
+        const tmp = {id: x.id, name: x.first_name};
+        mRay.push(tmp);
+      });
+      
+      // Get role/id pairs for Inquirer list
+      this.dd.query(`SELECT * FROM role`, (err,rows,fld)=>{
+        if(err){
+          console.log(`err: ${err}`);
+          return;
+        }
+        rows.forEach(x=>{
+          const tmp = {id: x.id, name: x.title};
+          rRay.push(tmp);
+        });
+        
+        inquirer
+        .prompt([
+          {
+            type: 'input',
+            name: 'fName',
+            message: 'What is the first name?'
+          },
+          {
+            type: 'input',
+            name: 'lName',
+            message: 'What is the last name?'
+          },
+          {
+            type: 'list',
+            name: 'role',
+            message: 'Select role.',
+            choices: rRay
+          },
+          {
+            type: 'list',
+            name: 'mgr',
+            message: 'Select manager.',
+            choices: mRay
+          }
+        ])
+        .then(({ fName, lName, role, mgr })=>{
+          // Extract IDs for mgr/role to be used on employee insertion
+          const selectedMgr = mRay.find(x=> mgr == x.name);
+          const selectedRol = rRay.find(x=> role == x.name);
+          const qq = `INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES(?,?,?,?)`;
+          this.dd.query(qq, [`${fName}`,`${lName}`,selectedRol.id, selectedMgr.id], (e)=>{
+            if(e){console.log(`e: ${e}`)};
+            console.clear();
+            return this.run();
+          });
+        })
+        .catch((e)=>{
+          console.log(`error:  ${e}`);
+        });
+      })
+    })
+  }
+
+  updateEmployee() {
+    // Arrays to hold manager/id and role/id pairs
+    let mRay = [];
+    let rRay = [];
+    // Get manager/id pairs for Inquirer list
+    this.dd.query(`SELECT * FROM employee`, (err,rows,fld)=>{
+      if(err){
+        console.log(`err: ${err}`);
+        return;
+      }
+      rows.forEach(x=>{
+        const tmp = {id: x.id, name: x.first_name};
+        mRay.push(tmp);
+      });
+      
+      // Get role/id pairs for Inquirer list
+      this.dd.query(`SELECT * FROM role`, (err,rows,fld)=>{
+        if(err){
+          console.log(`err: ${err}`);
+          return;
+        }
+        rows.forEach(x=>{
+          const tmp = {id: x.id, name: x.title};
+          rRay.push(tmp);
+        });
+        
+        inquirer
+        .prompt([
+          {
+            type: 'list',
+            name: 'emp',
+            message: 'Select employee.',
+            choices: mRay
+          },
+          {
+            type: 'list',
+            name: 'role',
+            message: 'Select role.',
+            choices: rRay
+          }
+        ])
+        .then(({ emp, role})=>{
+          const selectedEmp = mRay.find(x=> emp == x.name);
+          const selectedRol = rRay.find(x=> role == x.name);
+          const qq = `UPDATE employee SET role_id=? WHERE id=?`;
+          this.dd.query(qq, [selectedRol.id, selectedEmp.id], (e)=>{
+            if(e){console.log(`e: ${e}`)};
+            console.clear();
+            return this.run();
+          });
+        })
+        .catch((e)=>{
+          console.log(`error:  ${e}`);
+        });
+      })
+    })
   }
   
-}
+}//... end of CLI{} class definition
 const cli = new CLI();
 
 cli.run();
