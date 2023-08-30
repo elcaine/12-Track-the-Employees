@@ -16,7 +16,7 @@ CLI application that allows someone to manage a database of employees.
 No screenshot for this challenge as the video-walkthrough covers this.
 
 ## Links
-### [Link to repo](https://github.com/elcaine/https://github.com/elcaine/12-Track-the-Employees)
+### [Link to repo](https://github.com/elcaine/12-Track-the-Employees)
 ### [Link to video walkthrough](https://youtu.be/DPfiUVkATF8)
 
 ### Acknowledged sources
